@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=coverage">
+    <title>한화리조트 - 권성목님 전용</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce4ec, #fad0e0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            color: #333;
+            padding: 20px;
+        }
+        .wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* 축하 문구 섹션 - 로딩 완료 후에만 보임 */
+        .congratulations-section {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 600px;
+            display: none;
+        }
+        .congratulations-section.active {
+            display: block;
+        }
+        .congratulations-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #e91e63;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .emoji {
+            display: inline-block;
+            font-size: 32px;
+            margin: 0 5px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .emoji:nth-child(2) { animation-delay: 0.2s; }
+        .emoji:nth-child(3) { animation-delay: 0.4s; }
+        .winner-text {
+            font-size: 52px;
+            font-weight: 700;
+            color: #e91e63;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .winner-image {
+            text-align: center;
+            margin: 15px 0;
+        }
+        .winner-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: block;
+        }
+        .winner-image img:last-child {
+            margin-top: 15px;
+        }
+
+        /* 등장 애니메이션 - PPT 나타나기 효과 */
+        .congratulations-section .congratulations-text {
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 0.8s ease;
+        }
+        .congratulations-section .winner-image img {
+            opacity: 0;
+        }
+        .congratulations-section .winner-text {
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 0.8s ease;
+        }
+        .congratulations-section.active .congratulations-text {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+        .congratulations-section.active .winner-image img:nth-child(1) {
+            animation: fadeInImg 1s ease 1.8s forwards;
+        }
+        .congratulations-section.active .winner-image img:nth-child(2) {
+            animation: fadeInImg 1s ease 2.5s forwards;
+        }
+        @keyframes fadeInImg {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .congratulations-section.active .winner-text {
+            animation: textPopUp 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s forwards;
+        }
+        @keyframes textPopUp {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            80% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading-section {
+            display: none;
+        }
+        .loading-section.active {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(233, 30, 99, 0.3);
+            border-top-color: #e91e63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #e91e63;
+        }
+        .loading-dots {
+            display: inline-block;
+            font-size: 24px;
+            font-weight: 600;
+            color: #e91e63;
+        }
+        .loading-dots::after {
+            content: '';
+            animation: ellipsis 1.5s infinite;
+            display: inline-block;
+            width: 1em;
+            margin-left: 5px;
+            border-bottom: 3px solid #e91e63;
+        }
+        @keyframes ellipsis {
+            0%, 20% { content: ''; }
+            25%, 45% { content: '.'; }
+            50%, 70% { content: '..'; }
+            75%, 100% { content: '...'; }
+        }
+
+        /* 폭죽 파편 */
+        .firework {
+            position: fixed;
+            z-index: 5;
+        }
+        .firework-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            animation: launch-linear 1.6s forwards;
+        }
+        @keyframes launch-linear {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-300px) scale(0.2);
+                opacity: 0;
+            }
+        }
+        .firework-circle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            animation: expand 1.6s forwards;
+        }
+        @keyframes expand {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(4);
+                opacity: 0;
+            }
+        }
+        .firework-star {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff5722;
+            transform: rotate(45deg);
+            border-radius: 2px;
+            animation: star-anim 1.6s forwards;
+        }
+        @keyframes star-anim {
+            0% {
+                transform: translate(-50%, -50%) rotate(45deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(45deg) scale(0);
+                opacity: 0;
+            }
+        }
+        .firework-spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: spark-anim 1.6s forwards;
+        }
+        @keyframes spark-anim {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 상단 고정 축하 문구 (로딩 완료 후에만 보임) -->
+        <div class="congratulations-section" id="congratulationsSection">
+            <div class="congratulations-text">
+                <span class="emoji">🎉</span>
+                <span class="emoji">🎊</span>
+                <span class="emoji">🎁</span>
+            </div>
+            <div class="winner-text">축하합니다!<br>할아버지 당첨! 🎉</div>
+            <div class="winner-image">
+                <img src="./Image/father.png" alt="할아버지 사진" />
+                <img src="./Image/baby.png" alt="아기 사진" />
+            </div>
+        </div>
+
+        <!-- 로딩 영역 -->
+        <div class="loading-section active" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="loading-text">경품 추첨 중</div>
+            <div class="loading-dots"></div>
+        </div>
+    </div>
+
+    <div class="firework" id="firework"></div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const loadingSection = document.getElementById('loadingSection');
+            const congratulationsSection = document.getElementById('congratulationsSection');
+
+            // 5초 뒤에 결과 표시
+            setTimeout(function() {
+                // 로딩 섹션 숨기기
+                loadingSection.classList.remove('active');
+
+                // 축하 문구 섹션 보이기
+                congratulationsSection.classList.add('active');
+
+                // 폭죽 효과 실행
+                createFireworks();
+            }, 5000);
+        });
+
+        function createFireworks() {
+            const container = document.getElementById('firework');
+            const numFireworks = 10;
+
+            for (let i = 0; i < numFireworks; i++) {
+                setTimeout(function() {
+                    const startX = Math.random() * window.innerWidth;
+                    const startY = Math.random() * (window.innerHeight * 0.6) + window.innerHeight * 0.2;
+
+                    const piece = document.createElement('div');
+                    piece.classList.add('firework-piece');
+                    piece.style.left = startX + 'px';
+                    piece.style.top = (window.innerHeight - 100) + 'px';
+                    piece.style.background = getRandomColor();
+                    container.appendChild(piece);
+
+                    setTimeout(function() {
+                        const numParticles = 20;
+                        for (let j = 0; j < numParticles; j++) {
+                            const angle = (j / numParticles) * Math.PI * 2;
+                            const distance = 30 + Math.random() * 40;
+                            const x = startX + Math.cos(angle) * distance;
+                            const y = startY + Math.sin(angle) * distance;
+
+                            const circle = document.createElement('div');
+                            circle.classList.add('firework-circle');
+                            circle.style.left = x + 'px';
+                            circle.style.top = y + 'px';
+                            circle.style.background = getRandomColor();
+                            container.appendChild(circle);
+
+                            const star = document.createElement('div');
+                            star.classList.add('firework-star');
+                            star.style.left = x + 'px';
+                            star.style.top = y + 'px';
+                            star.style.background = getRandomColor();
+                            container.appendChild(star);
+
+                            const spark = document.createElement('div');
+                            spark.classList.add('firework-spark');
+                            spark.style.left = x + 'px';
+                            spark.style.top = y + 'px';
+                            container.appendChild(spark);
+                        }
+
+                        container.removeChild(piece);
+
+                        setTimeout(function() {
+                            const particles = container.querySelectorAll('.firework-circle, .firework-star, .firework-spark');
+                            particles.forEach(p => p.remove());
+                        }, 1800);
+                    }, 800);
+                }, i * 300);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#ffeb3b', '#ff5722', '#e91e63', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+</html>

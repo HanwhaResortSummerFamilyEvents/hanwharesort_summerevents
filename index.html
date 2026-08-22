@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=coverage">
+    <title>한화리조트 가족경품 행사</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+            overflow-x: hidden;
+            background: url('./Image/background.png') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+        .content-section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .event-text {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.7;
+            text-align: center;
+        }
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 22px;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="tel"]:focus {
+            border-color: #3498db;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            accent-color: #3498db;
+            cursor: pointer;
+        }
+        .checkbox-label {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+            flex: 1;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2196f3, #3498db);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.1s, box-shadow 0.3s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+        .btn-submit:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content-section">
+            <img src="./Image/poster.png" alt="한화리조트 가족경품 행사 포스터" />
+            <div class="event-text">
+                뜨거운 여름, 가족과 함께 떠나는 특별한 휴가를<br>더욱 즐겁게 만들어드리기 위해<br>한화리조트가 여러분을 위한 행사를 준비했습니다.<br>사랑하는 가족과 함께 웃고, 즐기고, <br>소중한 추억을 만들어보세요!<br>행사에 참여해 행운의 선물도 받고, <br>올여름 잊지 못할 행복한 순간을<br>한화리조트와 함께 만들어보세요!
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h1>경품 이벤트 참여하기</h1>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" placeholder="이름을 입력해주세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">전화번호</label>
+                    <input type="tel" id="phone" name="phone" placeholder="010-XXXX-XXXX" required>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agree" name="agree" required>
+                    <label class="checkbox-label" for="agree">개인정보 수집 동의<br>(이름과 전화번호는 응모자 확인 및 경품 발송을 위해 수집됩니다.)</label>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">응모하기</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('eventForm');
+        const checkbox = document.getElementById('agree');
+        const submitBtn = document.getElementById('submitBtn');
+
+        checkbox.addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nameInput = document.getElementById('name').value.trim();
+            
+            if (nameInput === '권성목') {
+                window.location.href = 'pageforfather.html';
+            } else if (nameInput === '이은재') {
+                window.location.href = 'pageformother.html';
+            } else {
+                alert('이름을 다시 확인해주세요.');
+            }
+        });
+    </script>
+</body>
+</html>
