@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=coverage">
+    <title>한화리조트 - 특별 경품 추첨 이벤트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce4ec, #fad0e0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            color: #333;
+            padding: 20px 15px 60px;
+        }
+        .wrapper {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 로딩 애니메이션 */
+        .loading-section {
+            display: none;
+        }
+        .loading-section.active {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #fce4ec, #fad0e0);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(233, 30, 99, 0.2);
+            border-top-color: #e91e63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #e91e63;
+        }
+        .loading-subtext {
+            font-size: 14px;
+            color: #888;
+        }
+        .loading-dots {
+            display: inline-block;
+            font-size: 22px;
+            font-weight: 600;
+            color: #e91e63;
+        }
+        .loading-dots::after {
+            content: '';
+            animation: ellipsis 1.5s infinite;
+            display: inline-block;
+            width: 1em;
+            margin-left: 2px;
+        }
+        @keyframes ellipsis {
+            0%, 20% { content: ''; }
+            25%, 45% { content: '.'; }
+            50%, 70% { content: '..'; }
+            75%, 100% { content: '...'; }
+        }
+
+        /* 결과 화면 전체 컨테이너 */
+        .congratulations-section {
+            text-align: center;
+            width: 100%;
+            display: none;
+        }
+        .congratulations-section.active {
+            display: block;
+        }
+
+        /* 당첨 메인 타이틀 */
+        .congratulations-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #e91e63;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .emoji {
+            display: inline-block;
+            font-size: 32px;
+            margin: 0 5px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .emoji:nth-child(2) { animation-delay: 0.2s; }
+        .emoji:nth-child(3) { animation-delay: 0.4s; }
+        
+        .winner-text {
+            font-size: 42px;
+            font-weight: 800;
+            color: #e91e63;
+            text-shadow: 2px 2px 6px rgba(233, 30, 99, 0.2);
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+        
+        .winner-image {
+            text-align: center;
+            margin: 15px 0 30px;
+        }
+        .winner-image img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            display: block;
+        }
+        .winner-image img:last-child {
+            margin-top: 15px;
+        }
+
+        /* 등장 애니메이션 (원본 효과 동일 적용) */
+        .congratulations-section .congratulations-text {
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 0.8s ease;
+        }
+        .congratulations-section .winner-text {
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 0.8s ease;
+        }
+        .congratulations-section .winner-image img {
+            opacity: 0;
+        }
+
+        .congratulations-section.active .congratulations-text {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+        
+        /* 텍스트 팝업(Pop-Up) 애니메이션 */
+        .congratulations-section.active .winner-text {
+            animation: textPopUp 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s forwards;
+        }
+        @keyframes textPopUp {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            80% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 이미지 순차 페이드인 애니메이션 */
+        .congratulations-section.active .winner-image img:nth-child(1) {
+            animation: fadeInImg 1s ease 1.8s forwards;
+        }
+        .congratulations-section.active .winner-image img:nth-child(2) {
+            animation: fadeInImg 1s ease 2.5s forwards;
+        }
+        @keyframes fadeInImg {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 스크롤 유도 화살표 */
+        .scroll-down {
+            margin: 30px 0;
+            font-size: 14px;
+            color: #888;
+            animation: fadeInUp 1s ease 3.2s forwards, pulseArrow 1.5s infinite 4.2s;
+            opacity: 0;
+        }
+        @keyframes pulseArrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+
+        /* 추가 콘텐츠 카드 공통 스타일 */
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-top: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 아기 정보 섹션 */
+        .baby-info {
+            background: #fffdf9;
+            border: 2px dashed #f8bbd0;
+        }
+        .baby-title {
+            font-size: 15px;
+            color: #888;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .baby-nickname {
+            font-size: 32px;
+            font-weight: 800;
+            color: #e91e63;
+            margin-bottom: 15px;
+        }
+        .dday-box {
+            background: #fce4ec;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        .dday-box span {
+            font-size: 14px;
+            color: #666;
+            display: block;
+        }
+        .dday-box strong {
+            font-size: 24px;
+            color: #e91e63;
+            font-weight: 800;
+        }
+        .due-date {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        /* 편지 섹션 */
+        .letter-card {
+            background: #ffffff;
+            text-align: left;
+            position: relative;
+        }
+        .letter-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e91e63;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #fce4ec;
+            padding-bottom: 8px;
+        }
+        .letter-content {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #444;
+            word-break: keep-all;
+        }
+
+        /* 하단 카피라이트/안내 */
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #a1887f;
+            text-align: center;
+        }
+
+        /* 폭죽 파편 */
+        .firework {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+        .firework-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            animation: launch-linear 1.6s forwards;
+        }
+        @keyframes launch-linear {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-300px) scale(0.2); opacity: 0; }
+        }
+        .firework-circle, .firework-star, .firework-spark {
+            position: absolute;
+            border-radius: 50%;
+            animation: expand 1.6s forwards;
+        }
+        .firework-circle { width: 12px; height: 12px; }
+        .firework-star { width: 10px; height: 10px; transform: rotate(45deg); border-radius: 2px; }
+        .firework-spark { width: 6px; height: 6px; background: #fff; }
+        
+        @keyframes expand {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 결과 섹션 -->
+        <div class="congratulations-section" id="congratulationsSection">
+            <div class="congratulations-text">
+                <span class="emoji">🎉</span>
+                <span class="emoji">🎊</span>
+                <span class="emoji">🎁</span>
+            </div>
+            <div class="winner-text">축하합니다!<br>할아버지 당첨! 🎉</div>
+            
+            <div class="winner-image">
+                <img src="./Image/father.png" alt="할아버지 사진" />
+                <img src="./Image/baby.png" alt="아기 초음파 사진" />
+            </div>
+
+            <div class="scroll-down">
+                👇 아래로 스크롤 해보세요
+            </div>
+
+            <!-- 아기 프로필 카드 -->
+            <div class="card baby-info" id="babyCard">
+                <div class="baby-title">OUR BABY</div>
+                <div class="baby-nickname">새싹이 🌱</div>
+                <div class="dday-box">
+                    <span>새싹이를 만나는 날까지</span>
+                    <strong id="ddayCount">D-DAY</strong>
+                </div>
+                <div class="due-date">
+                    📅 <strong>출산 예정일:</strong> 2027년 4월 초
+                </div>
+            </div>
+
+            <!-- 부모님 전용 손편지 -->
+            <div class="card letter-card" id="letterCard">
+                <div class="letter-header">💌 사랑하는 아버지, 어머니께</div>
+                <div class="letter-content">
+                    두 분이 저희에게 쏟아주신 커다란 사랑 덕분에 저희에게도 소중한 새 생명이 찾아왔어요.<br><br>
+                    이제 저희도 부모가 되어, 두 분이 걸어오신 따뜻하고 사랑이 넘치는 길을 예쁘게 따라 걸어가 볼게요.<br><br>
+                    저희 건강하게 잘 키우겠습니다. 할머니, 할아버지 되신 걸 진심으로 축하드려요! ❤️
+                </div>
+            </div>
+
+            <div class="footer">
+                © 2027 새싹이네 가정 | Special Event Page
+            </div>
+        </div>
+
+        <!-- 로딩 영역 -->
+        <div class="loading-section active" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="loading-text">경품 추첨 중</div>
+            <div class="loading-subtext">잠시만 기다려 주세요</div>
+            <div class="loading-dots"></div>
+        </div>
+    </div>
+
+    <div class="firework" id="firework"></div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const loadingSection = document.getElementById('loadingSection');
+            const congratulationsSection = document.getElementById('congratulationsSection');
+
+            // 5초 뒤 결과 표시
+            setTimeout(function() {
+                loadingSection.classList.remove('active');
+                congratulationsSection.classList.add('active');
+
+                // D-Day 계산 실행
+                calculateDDay('2027-04-01');
+
+                // 폭죽 연출
+                createFireworks();
+
+                // 카드 등장 스크롤 이벤트
+                initScrollAnimation();
+            }, 5000);
+        });
+
+        // D-Day 자동 계산 함수
+        function calculateDDay(targetDateStr) {
+            const today = new Date();
+            const targetDate = new Date(targetDateStr);
+            const diffTime = targetDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const ddayElement = document.getElementById('ddayCount');
+            if (diffDays > 0) {
+                ddayElement.innerText = `D-${diffDays}`;
+            } else if (diffDays === 0) {
+                ddayElement.innerText = 'D-DAY!';
+            } else {
+                ddayElement.innerText = `D+${Math.abs(diffDays)}`;
+            }
+        }
+
+        // 스크롤 시 카드가 자연스럽게 떠오르는 애니메이션
+        function initScrollAnimation() {
+            const cards = document.querySelectorAll('.card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => observer.observe(card));
+        }
+
+        // 폭죽 효과
+        function createFireworks() {
+            const container = document.getElementById('firework');
+            const numFireworks = 8;
+
+            for (let i = 0; i < numFireworks; i++) {
+                setTimeout(function() {
+                    const startX = Math.random() * window.innerWidth;
+                    const startY = Math.random() * (window.innerHeight * 0.5) + window.innerHeight * 0.1;
+
+                    const piece = document.createElement('div');
+                    piece.classList.add('firework-piece');
+                    piece.style.left = startX + 'px';
+                    piece.style.top = (window.innerHeight - 50) + 'px';
+                    piece.style.background = getRandomColor();
+                    container.appendChild(piece);
+
+                    setTimeout(function() {
+                        const numParticles = 16;
+                        for (let j = 0; j < numParticles; j++) {
+                            const angle = (j / numParticles) * Math.PI * 2;
+                            const distance = 25 + Math.random() * 35;
+                            const x = startX + Math.cos(angle) * distance;
+                            const y = startY + Math.sin(angle) * distance;
+
+                            const circle = document.createElement('div');
+                            circle.classList.add('firework-circle');
+                            circle.style.left = x + 'px';
+                            circle.style.top = y + 'px';
+                            circle.style.background = getRandomColor();
+                            container.appendChild(circle);
+
+                            const star = document.createElement('div');
+                            star.classList.add('firework-star');
+                            star.style.left = x + 'px';
+                            star.style.top = y + 'px';
+                            star.style.background = getRandomColor();
+                            container.appendChild(star);
+                        }
+
+                        if(container.contains(piece)) container.removeChild(piece);
+
+                        setTimeout(function() {
+                            const particles = container.querySelectorAll('.firework-circle, .firework-star');
+                            particles.forEach(p => p.remove());
+                        }, 1600);
+                    }, 800);
+                }, i * 350);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#ffeb3b', '#ff5722', '#e91e63', '#4caf50', '#2196f3', '#ff9800'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+</html>
