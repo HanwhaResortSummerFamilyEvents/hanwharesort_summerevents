@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=coverage">
+    <title>한화리조트 - 특별 경품 추첨 이벤트</title>
+    <!-- 구글 폰트 및 나눔스퀘어 CDN 로드 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gamja+Flower&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            /* 초기 배경: 차분한 회색 계열 */
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            color: #333;
+            padding: 20px 15px 60px;
+            transition: background 0.8s ease;
+        }
+
+        /* 당첨 확인 후 핑크 계열 배경으로 전환 */
+        body.pink-theme {
+            background: linear-gradient(135deg, #fce4ec, #fad0e0);
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 1. 로딩 애니메이션 및 버튼 영역 (회색 계열) */
+        .loading-section {
+            display: none;
+        }
+        .loading-section.active {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(71, 85, 105, 0.2);
+            border-top-color: #334155;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: clamp(24px, 6.5vw, 28px);
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #334155;
+            font-family: 'Gamja Flower', cursive, sans-serif;
+            white-space: nowrap;
+        }
+        .loading-subtext {
+            font-size: 15px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .loading-dots {
+            display: inline-block;
+            font-size: 24px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .loading-dots::after {
+            content: '';
+            animation: ellipsis 1.5s infinite;
+            display: inline-block;
+            width: 1em;
+            margin-left: 2px;
+        }
+        @keyframes ellipsis {
+            0%, 20% { content: ''; }
+            25%, 45% { content: '.'; }
+            50%, 70% { content: '..'; }
+            75%, 100% { content: '...'; }
+        }
+
+        /* 추첨 완료 후 등장하는 당첨 확인 버튼 */
+        .result-btn-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .complete-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 20px;
+            font-family: 'Gamja Flower', cursive, sans-serif;
+        }
+        .confirm-btn {
+            background: linear-gradient(135deg, #334155, #475569);
+            color: #ffffff;
+            border: none;
+            padding: 16px 36px;
+            font-size: 22px;
+            font-weight: 700;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(51, 65, 85, 0.3);
+            cursor: pointer;
+            outline: none;
+            font-family: 'Gamja Flower', cursive, sans-serif;
+            transition: all 0.2s ease;
+            animation: pulseBtn 1.8s infinite;
+        }
+        .confirm-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 10px rgba(51, 65, 85, 0.2);
+        }
+        @keyframes pulseBtn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 2. 결과 화면 전체 컨테이너 (핑크 계열) */
+        .congratulations-section {
+            text-align: center;
+            width: 100%;
+            display: none;
+        }
+        .congratulations-section.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 축하문구 극대화 섹션 */
+        .congratulations-header {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        .congratulations-text {
+            font-size: clamp(34px, 9vw, 42px);
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ff2a75;
+            font-family: 'Gaegu', cursive, sans-serif;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .congratulations-text.show {
+            opacity: 1;
+        }
+        .emoji {
+            display: inline-block;
+            font-size: 42px;
+            margin: 0 6px;
+            animation: bounce 0.8s ease-in-out infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-12px) scale(1.15); }
+        }
+        .emoji:nth-child(2) { animation-delay: 0.15s; }
+        .emoji:nth-child(3) { animation-delay: 0.3s; }
+        
+        /* 나눔스퀘어 Bold & 후광 제거 적용 */
+        .winner-text {
+            font-size: clamp(38px, 11vw, 52px);
+            font-weight: 800; /* Bold */
+            color: #e91e63;
+            line-height: 1.35;
+            margin-bottom: 12px;
+            font-family: 'NanumSquare', 'NanumSquareB', sans-serif;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            text-shadow: none; /* 후광/그림자 효과 제거 */
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .winner-text.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* 가족 사진 섹션 */
+        .winner-image {
+            text-align: center;
+            margin: 10px 0 25px;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+        .winner-image img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+            display: block;
+        }
+
+        /* 스크롤 유도 화살표 */
+        .scroll-down {
+            margin: 15px 0 25px;
+            color: #888;
+            opacity: 0;
+            font-family: 'Gaegu', cursive, sans-serif;
+            font-size: 20px;
+            white-space: nowrap;
+        }
+        @keyframes pulseArrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+
+        /* 카드 공통 스타일 */
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .baby-info {
+            background: #fffdf9;
+            border: 2px dashed #f8bbd0;
+        }
+        .baby-title {
+            font-size: 15px;
+            color: #888;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            margin-bottom: 5px;
+        }
+        .baby-nickname {
+            font-size: 40px;
+            font-weight: 700;
+            color: #e91e63;
+            margin-bottom: 15px;
+            font-family: 'Gamja Flower', cursive, sans-serif;
+            white-space: nowrap;
+        }
+        .dday-box {
+            background: #fce4ec;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        .dday-box span {
+            font-size: 14px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .dday-box strong {
+            font-size: 28px;
+            color: #e91e63;
+            font-weight: 800;
+            font-family: 'Gaegu', cursive, sans-serif;
+        }
+        .due-date {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .letter-card {
+            background: #ffffff;
+            text-align: left;
+            position: relative;
+        }
+        .letter-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e91e63;
+            margin-bottom: 15px;
+            border-bottom: 2px dashed #fce4ec;
+            padding-bottom: 10px;
+            font-family: 'Gamja Flower', cursive, sans-serif;
+        }
+        .letter-content {
+            font-size: 16px;
+            line-height: 1.9;
+            color: #444;
+            word-break: keep-all;
+            font-family: 'Gowun Batang', serif;
+        }
+
+        /* 순차 등장 애니메이션 설정 */
+        .winner-image.seq-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-down.seq-visible {
+            animation: fadeInUp 0.8s ease forwards, pulseArrow 1.5s infinite 0.8s;
+        }
+        
+        .baby-info.seq-visible,
+        .letter-card.seq-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #a1887f;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 결과 섹션 -->
+        <div class="congratulations-section" id="congratulationsSection">
+            <!-- 1. 축하문구 -->
+            <div class="congratulations-header">
+                <div class="congratulations-text" id="emojiText">
+                    <span class="emoji">🥳</span>
+                    <span class="emoji">🎊</span>
+                    <span class="emoji">🎁</span>
+                </div>
+                <div class="winner-text" id="winnerText">축하합니다!<br>🎉 할아버지 당첨! 🎉</div>
+            </div>
+            
+            <!-- 2. 가족 사진 -->
+            <div class="winner-image" id="winnerImage">
+                <img src="./Image/family.png" alt="가족 사진" />
+            </div>
+
+            <div class="scroll-down" id="scrollDown">
+                👇 아래로 스크롤 해보세요
+            </div>
+
+            <!-- 3. 아기 프로필 -->
+            <div class="card baby-info" id="babyCard">
+                <div class="baby-title">OUR BABY</div>
+                <div class="baby-nickname">새싹이 🌱</div>
+                <div class="dday-box">
+                    <span>새싹이를 만나는 날까지</span>
+                    <strong id="ddayCount">D-DAY</strong>
+                </div>
+                <div class="due-date">
+                    📅 <strong>출산 예정일:</strong> 2027년 4월 초
+                </div>
+            </div>
+
+            <!-- 4. 편지 -->
+            <div class="card letter-card" id="letterCard">
+                <div class="letter-header">💌 사랑하는 아버지, 어머니께</div>
+                <div class="letter-content">
+                    두 분이 저희에게 쏟아주신 커다란 사랑 덕분에<br>저희에게도 소중한 새 생명이 찾아왔어요.<br><br>
+                    이제 저희도 부모가 되어,<br>따뜻고 사랑이 넘치는 길을 함께 걸어갈게요.<br><br>
+                    저희 건강하게 잘 키우겠습니다.<br>할머니, 할아버지가 되신 걸 진심으로 축하드려요!❤️<br><br>
+                    - 소연, 재웅 드림 -
+                </div>
+            </div>
+
+            <div class="footer">
+                © 2027 새싹이네 가족 | Special Event Page
+            </div>
+        </div>
+
+        <!-- 로딩 & 당첨확인 버튼 영역 -->
+        <div class="loading-section active" id="loadingSection">
+            <div id="loadingBox" style="text-align: center;">
+                <div class="spinner"></div>
+                <div class="loading-text">경품 추첨 중</div>
+                <div class="loading-subtext">잠시만 기다려 주세요</div>
+                <div class="loading-dots"></div>
+            </div>
+
+            <div class="result-btn-container" id="resultBtnBox">
+                <div class="complete-title">✨ 추첨이 완료되었습니다! ✨</div>
+                <button class="confirm-btn" id="confirmBtn">당첨 확인하기 🎁</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 트렌디한 폭죽 효과 라이브러리 (canvas-confetti) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const loadingSection = document.getElementById('loadingSection');
+            const loadingBox = document.getElementById('loadingBox');
+            const resultBtnBox = document.getElementById('resultBtnBox');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const congratulationsSection = document.getElementById('congratulationsSection');
+            const emojiText = document.getElementById('emojiText');
+            const winnerText = document.getElementById('winnerText');
+            const winnerImage = document.getElementById('winnerImage');
+            const scrollDown = document.getElementById('scrollDown');
+            const babyCard = document.getElementById('babyCard');
+            const letterCard = document.getElementById('letterCard');
+
+            setTimeout(function() {
+                loadingBox.style.display = 'none';
+                resultBtnBox.style.display = 'flex';
+            }, 4000);
+
+            confirmBtn.addEventListener('click', function() {
+                // 1. 당첨 확인하기 버튼 클릭 시 핑크 배경 및 결과 섹션 준비
+                document.body.classList.add('pink-theme');
+                loadingSection.classList.remove('active');
+                congratulationsSection.classList.add('active');
+
+                calculateDDay('2027-04-01');
+
+                // 2. 1초 동안 빈 배경 지연 후 🥳🎊🎁 등장
+                setTimeout(() => {
+                    emojiText.classList.add('show');
+                }, 1000);
+
+                // 3. 다시 1초 지연 후(클릭 기준 3초 후) 축하문구 나타나기 및 폭죽 연출
+                setTimeout(() => {
+                    winnerText.classList.add('show');
+                    triggerSubtleConfetti();
+                }, 3000);
+
+                // 4. 이후 사진, 카드 등 순차 등장 (기존 흐름 유지)
+                setTimeout(() => {
+                    winnerImage.classList.add('seq-visible');
+                    scrollDown.classList.add('seq-visible');
+                }, 4200);
+
+                setTimeout(() => {
+                    babyCard.classList.add('seq-visible');
+                }, 5000);
+
+                setTimeout(() => {
+                    letterCard.classList.add('seq-visible');
+                }, 5800);
+
+                setTimeout(() => {
+                    initScrollAnimation();
+                }, 5800);
+            });
+        });
+
+        function calculateDDay(targetDateStr) {
+            const today = new Date();
+            const targetDate = new Date(targetDateStr);
+            const diffTime = targetDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const ddayElement = document.getElementById('ddayCount');
+            if (diffDays > 0) {
+                ddayElement.innerText = `D-${diffDays}`;
+            } else if (diffDays === 0) {
+                ddayElement.innerText = 'D-DAY!';
+            } else {
+                ddayElement.innerText = `D+${Math.abs(diffDays)}`;
+            }
+        }
+
+        function initScrollAnimation() {
+            const cards = document.querySelectorAll('.card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('seq-visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => observer.observe(card));
+        }
+
+        // 모바일 최적화: 단 1회만 단정하게 터지는 파스텔 톤 가루 연출
+        function triggerSubtleConfetti() {
+            // 기본 사각형/원형 종이 조각 (중앙에서 퍼짐)
+            confetti({
+                particleCount: 45,
+                spread: 70,
+                origin: { y: 0.5 },
+                colors: ['#ff85a2', '#f7d794', '#a8e6cf', '#ffd3b6'],
+                scalar: 0.9,
+                disableForReducedMotion: true
+            });
+
+            // 하트 조각 (살짝 느리게 흩날림)
+            confetti({
+                particleCount: 20,
+                spread: 80,
+                origin: { y: 0.55 },
+                shapes: ['heart'],
+                colors: ['#ff4757', '#ff6b81'],
+                scalar: 1.1,
+                gravity: 0.8,
+                disableForReducedMotion: true
+            });
+        }
+    </script>
+</body>
+</html>
